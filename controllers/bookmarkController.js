@@ -1,6 +1,7 @@
 // const express = require("express");
 const BookmarkService = require('../services/firestore/BookmarksService');
 const ClientError = require("../exceptions/ClientError");
+const { firestore } = require('firebase-admin');
 
 const bookmarkService = new BookmarkService();
 
@@ -75,8 +76,8 @@ const postBookmark = async (req, res) => {
 
 const deleteBookmark = async (req, res) => {
   try {
-    const username = req.params.username;
-    const contentId = req.params.contentId;
+    const { username, contentId } = req.params;
+
     await bookmarkService.deleteBookmarkById(username, contentId);
     res.status(200).json({
       status: "success",

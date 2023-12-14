@@ -1,6 +1,8 @@
 const express = require("express");
 const BatikService = require('../services/firestore/BatikService');
 const ClientError = require("../exceptions/ClientError");
+const NotFoundError = require("../exceptions/NotFoundError");
+
 
 const batikService = new BatikService();
 
@@ -22,6 +24,7 @@ const getBatikById = async (req, res) => {
   try {
     const batikId = req.params.id;
     const batik = await batikService.getBatikById(batikId);
+    if(!batik) throw new NotFoundError('Batik tidak ditemukan');
 
     res.status(200).json({
       status: "success",

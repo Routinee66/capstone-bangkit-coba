@@ -1,6 +1,7 @@
 const express = require("express");
 const ArticlesService = require('../services/firestore/ArticlesService');
 const ClientError = require("../exceptions/ClientError");
+const NotFoundError = require("../exceptions/NotFoundError");
 
 const articlesService = new ArticlesService();
 
@@ -22,7 +23,7 @@ const getArticleById = async (req, res) => {
   try {
     const articleId = req.params.id;
     const article = await articlesService.getArticleById(articleId);
-
+    if(!article) throw new NotFoundError('Artikel tidak ditemukan');
     res.status(200).json({
       status: "success",
       error: false,

@@ -18,77 +18,65 @@ class BookmarksServices {
   }
 
   async getBookmarkByUsername(username) {
-    try {
-      const querySnapshot = await this.collectionRef.doc(username).get();
-      const bookmarks = {};
+    const querySnapshot = await this.collectionRef.doc(username).get();
+    const bookmarks = {};
 
-      if (querySnapshot.empty) {
-        throw new NotFoundError('Bookmark Tidak Ditemukan');
-      }
-
-      const result = querySnapshot.data();
-      const contentTypes = Object.keys(result);
-
-      const promises = contentTypes.map(async (contentType) => {
-        const contents = result[contentType];
-        bookmarks[contentType] = [];
-
-        await Promise.all(contents.map(async (content) => {
-          if (contentType === 'artikel') {
-            const article = await articlesService.getArticleById(content.contentId);
-            bookmarks[contentType].push(article);
-          } else if (contentType === 'batik') {
-            const batik = await batikService.getBatikById(content.contentId);
-            bookmarks[contentType].push(batik);
-          }
-        }));
-      });
-
-      await Promise.all(promises);
-      return bookmarks;
-    } catch (error) {
-      throw new ClientError('Gagal mendapatkan bookmark');
+    if (querySnapshot.empty) {
+      throw new NotFoundError('Bookmark Tidak Ditemukan');
     }
+
+    const result = querySnapshot.data();
+    const contentTypes = Object.keys(result);
+
+    const promises = contentTypes.map(async (contentType) => {
+      const contents = result[contentType];
+      bookmarks[contentType] = [];
+
+      await Promise.all(contents.map(async (content) => {
+        if (contentType === 'artikel') {
+          const article = await articlesService.getArticleById(content.contentId);
+          bookmarks[contentType].push(article);
+        } else if (contentType === 'batik') {
+          const batik = await batikService.getBatikById(content.contentId);
+          bookmarks[contentType].push(batik);
+        }
+      }));
+    });
+
+    await Promise.all(promises);
+    return bookmarks;
   }
 
   async getBookmarkArticlesByUsername(username) {
-    try {
-      const querySnapshot = await this.collectionRef.doc(username).get();
-      const result = querySnapshot.data();
+    const querySnapshot = await this.collectionRef.doc(username).get();
+    const result = querySnapshot.data();
 
-      if (querySnapshot.empty) {
-        throw new NotFoundError('Bookmark Tidak Ditemukan');
-      }
-
-      const promises = await Promise.all(result['article'].map(async (content) => {
-        const article = await articlesService.getArticleById(content.contentId);
-        return article;
-      }));
-
-      return promises;
-    } catch (error) {
-      throw new ClientError('Gagal mendapatkan bookmark artikel');
+    if (querySnapshot.empty) {
+      throw new NotFoundError('Bookmark Tidak Ditemukan');
     }
+
+    const promises = await Promise.all(result['article'].map(async (content) => {
+      const article = await articlesService.getArticleById(content.contentId);
+      return article;
+    }));
+
+    return promises;
   }
 
   async getBookmarkBatikByUsername(username) {
-    try {
-      const querySnapshot = await this.collectionRef.doc(username).get();
-      const result = querySnapshot.data();
+    const querySnapshot = await this.collectionRef.doc(username).get();
+    const result = querySnapshot.data();
 
-      if (querySnapshot.empty) {
-        throw new NotFoundError('Bookmark Tidak Ditemukan');
-      }
-
-      const promises = await Promise.all(result['batik'].map(async (content) => {
-        const batik = await batikService.getBatikById(content.contentId);
-        return batik;
-      }));
-
-      return promises;
-    } catch (error) {
-      throw new ClientError('Gagal mendapatkan bookmark batik');
+    if (querySnapshot.empty) {
+      throw new NotFoundError('Bookmark Tidak Ditemukan');
     }
+
+    const promises = await Promise.all(result['batik'].map(async (content) => {
+      const batik = await batikService.getBatikById(content.contentId);
+      return batik;
+    }));
+
+    return promises;
   }
 
   async postBookmark(username, contentId) {
@@ -116,18 +104,26 @@ class BookmarksServices {
   }
 
   async deleteBookmarkById(username, contentId) {
-    try {
-      const contentType = contentId.split('-')[0];
-      const valueToRemove = { 'contentId': contentId };
-
-      await this.collectionRef.doc(username).update({
-        [contentType]: admin.firestore.FieldValue.arrayRemove(valueToRemove),
-      });
-
-      return "Bookmark berhasil dihapus";
-    } catch (error) {
-      throw new ClientError('Gagal menghapus bookmark');
+    const contentType = contentId.split('-')[0];
+    const valueToRemove = { 'contentId': contentId };
+    let collection;
+    if (contentType === 'article') {
+      collection = 'articles';
+    } else if (contentType === 'batik') {
+      collection = contentType;
+    } else {
+      throw new NotFoundError('Konten Tidak Ditemukan');
     }
+    const querySnapshot = await firestore.collection(collection).doc(contentId).get();
+    if (querySnapshot.empty) {
+      throw new NotFoundError('Artikel Tidak Ditemukan');
+    }
+
+    await this.collectionRef.doc(username).update({
+      [contentType]: admin.firestore.FieldValue.arrayRemove(valueToRemove),
+    });
+
+    return "Bookmark berhasil dihapus";
   }
 }
 
