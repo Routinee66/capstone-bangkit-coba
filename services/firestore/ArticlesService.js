@@ -2,7 +2,6 @@
   const { admin, firestore } = require('../../config/firebaseConfig');
   const { nanoid } = require('nanoid');
   const NotFoundError = require('../../exceptions/NotFoundError');
-  const ClientError = require('../../exceptions/ClientError');
 
   class ArticlesService {
     constructor() {
@@ -59,6 +58,21 @@
       } catch (error) {
         throw new Error('Gagal menyimpan artikel:' + error.message);
       }
+    }
+
+    async searchArticles(keyword) {
+      const querySnapshot = await this.collectionRef.get();
+      const articles = [];
+      const newArticles = [];
+      querySnapshot.forEach((doc) => {
+        articles.push(doc.data());
+      });
+  
+      articles.forEach((article) => {
+        const filteredData = [article].filter(item => item.content.includes(keyword));
+        if(filteredData.length !== 0) newArticles.push(filteredData[0]);
+      });
+      return newArticles;
     }
   }
   

@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const articlesRouter = require('./router/articlesRouter');
 const batikRouter = require('./router/batikRouter');
 const bookmarkRouter = require('./router/bookmarkRouter');
+const searchRouter = require('./router/searchRouter');
 const multer = require('multer');
 
 const storage = multer.diskStorage({
@@ -24,6 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api', articlesRouter); 
 app.use('/api', batikRouter); 
 app.use('/api', bookmarkRouter); 
+app.use('/api', searchRouter); 
 
 const PORT = process.env.PORT || 3000;
 

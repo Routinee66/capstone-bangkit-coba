@@ -54,6 +54,21 @@ class BatikService {
     console.log('Berhasil menambahkan batik');
     return batik.id;
   }
+
+  async searchBatik(keyword) {
+    const querySnapshot = await this.collectionRef.get();
+    const batik = [];
+    const newBatik = [];
+    querySnapshot.forEach((doc) => {
+      batik.push(doc.data());
+    });
+
+    batik.forEach((batik) => {
+      const filteredData = [batik].filter(item => item.description.includes(keyword));
+      if(filteredData.length !== 0) newBatik.push(filteredData[0]);
+    });
+    return newBatik;
+  }
 }
 
 module.exports = BatikService;
