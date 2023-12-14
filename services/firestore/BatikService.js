@@ -1,95 +1,59 @@
 // const { Firestore } = require('@google-cloud/firestore');
-const { admin, firestore } = require('../../config/firebaseConfig')
+const { admin, firestore } = require('../../config/firebaseConfig');
 const { nanoid } = require('nanoid');
 const NotFoundError = require('../../exceptions/NotFoundError');
 
 class BatikService {
-  constructor(collection) {
+  constructor() {
+    this.collection = 'batik';
     this.firestore = firestore;
-    this.collectionRef = this.firestore.collection(collection);
+    this.collectionRef = this.firestore.collection(this.collection);
   }
 
-  async getBatik() {
+  async getAllBatik() {
     var dataAll = [];
     await this.collectionRef.get()
       .then((snapshots) => {
         snapshots.forEach((doc) => {
-          var member = {};
-          member['ID Dokumen : '] = doc.id;
-          member['Data Dokumen : '] = doc.data();
-          dataAll.push(member);
+          dataAll.push(doc.data());
         });
 
       })
       .catch((error) => {
         return ('Gagal mendapatkan data:', error);
       });
-    console.log(dataAll);
     return dataAll;
   }
 
-  async getBatikById(document) {
-    // const doc = await this.collectionRef.doc(document).get();
-    const querySnapshot = await this.collectionRef.where('id', '==', document).get();
-    var artikel = [];
+  async getBatikById(documentId) {
+    const querySnapshot = await this.collectionRef.doc(documentId).get();
     if (querySnapshot.empty) {
       throw new NotFoundError('Batik Tidak Ditemukan');
     } else {
-      querySnapshot.forEach((doc) => {
-        artikel.push(doc.data());
-      })
+      return querySnapshot.data();
     }
-    console.log(artikel);
-    return artikel;
   }
 
-  async postBatik(title, origin, description, url) {
-    const article =
-    {
-      id: `batik-${nanoid(16)}`,
+  async postBatik(title, origin, description, imageUrl) {
+    const documentId = `batik-${nanoid(16)}`;
+    const batik = {
+      id: documentId,
       title: title,
       origin: origin,
       description: description,
-      url: url
+      imageUrl: imageUrl
     };
 
-    const documentRef = this.collectionRef.doc();
-    // Tambahkan data ke dokumen
-    documentRef.set(article)
-      .then(() => {
-        console.log('Berhasil menambahkan baik');
-      })
-      .catch((error) => {
-        console.error('Gagal menyimpan data:', error);
-      });
+    const documentRef = this.collectionRef.doc(documentId);
+    
+    if (!title || !origin || !description || !imageUrl) {
+      throw new Error('Data tidak lengkap. Pastikan semua field terisi.');
+    }
 
-    return article.id;
+    await documentRef.set(batik);
+    console.log('Berhasil menambahkan batik');
+    return batik.id;
   }
-
-  async deleteBatikById(article) {
-    // Menghapus seluruh koleksi dan dokumennya
-    this.collectionRef.listDocuments().then((documents) => {
-      const deletePromises = documents.map((document) => document.delete());
-      return Promise.all(deletePromises);
-    }).then(() => {
-      console.log('Koleksi dan dokumennya berhasil dihapus');
-    }).catch((error) => {
-      console.error('Gagal menghapus koleksi dan dokumennya:', error);
-    });
-  }
-
-  async deleteAllBatik() {
-    // Menghapus seluruh koleksi dan dokumennya
-    this.collectionRef.listDocuments().then((documents) => {
-      const deletePromises = documents.map((document) => document.delete());
-      return Promise.all(deletePromises);
-    }).then(() => {
-      console.log('Koleksi dan dokumennya berhasil dihapus');
-    }).catch((error) => {
-      console.error('Gagal menghapus koleksi dan dokumennya:', error);
-    });
-  }
-
 }
 
 module.exports = BatikService;

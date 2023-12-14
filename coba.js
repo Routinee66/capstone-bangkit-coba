@@ -1,24 +1,25 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const app = express();
-const port = 3000;
-const multer = require('multer');
+const x = {};
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+const a = {
+  nama: "aaa",
+  umur: "11"
+}
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const b = {
+  "nama": "bbb",
+  "umur": "22"
+}
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+const c = {
+  "nama": "ccc",
+  "umur": "33"
+}
 
-app.post('/', upload.single('fileField'), (req, res) => {
-  console.log(req.body);
-  res.send('Hello World!')
-})
+x["yy"] = [];
+x["xx"] = [];
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+x["xx"].push(a);
+x["yy"].push(b);
+x["yy"].push(c);
+
+console.log(x);

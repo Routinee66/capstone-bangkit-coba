@@ -1,97 +1,65 @@
-// const { Firestore } = require('@google-cloud/firestore');
-const { admin, firestore } = require('../../config/firebaseConfig')
-const { nanoid } = require('nanoid');
-const NotFoundError = require('../../exceptions/NotFoundError');
+  // const { Firestore } = require('@google-cloud/firestore');
+  const { admin, firestore } = require('../../config/firebaseConfig');
+  const { nanoid } = require('nanoid');
+  const NotFoundError = require('../../exceptions/NotFoundError');
+  const ClientError = require('../../exceptions/ClientError');
 
-class ArticlesService {
-  constructor(collection) {
-    this.firestore = firestore;
-    this.collectionRef = this.firestore.collection(collection);
-  }
-
-  async getArticles() {
-    var dataAll = [];
-    await this.collectionRef.get()
-      .then((snapshots) => {
-        snapshots.forEach((doc) => {
-          var member = {};
-          member['ID Dokumen : '] = doc.id;
-          member['Data Dokumen : '] = doc.data();
-          dataAll.push(member);
-        });
-
-      })
-      .catch((error) => {
-        return ('Gagal mendapatkan data:', error);
-      });
-    console.log(dataAll);
-    return dataAll;
-  }
-
-  async getArticleById(document) {
-    // const doc = await this.collectionRef.doc(document).get();
-    const querySnapshot = await this.collectionRef.where('id', '==', document).get();
-    var artikel = [];
-    if (querySnapshot.empty) {
-      throw new NotFoundError('Artikel Tidak Ditemukan');
-    } else {
-      querySnapshot.forEach((doc) => {
-        artikel.push(doc.data());
-      })
+  class ArticlesService {
+    constructor() {
+      this.collection = 'articles';
+      this.firestore = firestore;
+      this.collectionRef = this.firestore.collection(this.collection);
     }
-    console.log(artikel);
-    return artikel;
-  }
 
-  async postArticles(title, author, content, url) {
-    const time = admin.firestore.Timestamp.now();
-    const article = 
-      {
-        id: `article-${nanoid(16)}`,
-        title: title,
-        author: author,
-        publishedDate: time,
-        content: content,
-        url: url
-      };
-
-      const documentRef = this.collectionRef.doc();
-      // Tambahkan data ke dokumen
-      documentRef.set(article)
-        .then(() => {
-          console.log('Berhasil menambahkan artikel');
-        })
-        .catch((error) => {
-          console.error('Gagal menyimpan data:', error);
+    async getArticles() {
+      try {
+        var allData = [];
+        const snapshots = await this.collectionRef.get();
+  
+        snapshots.forEach((doc) => {
+          allData.push(doc.data());
         });
+  
+        return allData;
+      } catch (error) {
+        throw new Error('Gagal mendapatkan data:' + error.message);
+      }
+    }
 
-    return article.id;
+    async getArticleById(document) {
+      const querySnapshot = await this.collectionRef.doc(document).get();
+      if (querySnapshot.empty) {
+        throw new NotFoundError('Artikel Tidak Ditemukan');
+      } else {
+        return querySnapshot.data();
+      }
+    }
+  
+    async postArticles(title, author, content, imageUrl) {
+      try {
+        const time = admin.firestore.Timestamp.now();
+        const articleId = `article-${nanoid(16)}`;
+        const article = {
+          id: articleId,
+          title: title,
+          author: author,
+          publishedDate: time,
+          content: content,
+          imageUrl: imageUrl
+        };
+  
+        if (!title || !author || !content || !imageUrl) {
+          throw new Error('Data tidak lengkap. Pastikan semua field terisi.');
+        }
+
+        const documentRef = this.collectionRef.doc(articleId);
+        
+        await documentRef.set(article);
+        return article.id;
+      } catch (error) {
+        throw new Error('Gagal menyimpan artikel:' + error.message);
+      }
+    }
   }
-
-  async deleteArticleById(article) {
-    // Menghapus seluruh koleksi dan dokumennya
-    this.collectionRef.listDocuments().then((documents) => {
-      const deletePromises = documents.map((document) => document.delete());
-      return Promise.all(deletePromises);
-    }).then(() => {
-      console.log('Koleksi dan dokumennya berhasil dihapus');
-    }).catch((error) => {
-      console.error('Gagal menghapus koleksi dan dokumennya:', error);
-    });
-  }
-
-  async deleteAllArticles() {
-    // Menghapus seluruh koleksi dan dokumennya
-    this.collectionRef.listDocuments().then((documents) => {
-      const deletePromises = documents.map((document) => document.delete());
-      return Promise.all(deletePromises);
-    }).then(() => {
-      console.log('Koleksi dan dokumennya berhasil dihapus');
-    }).catch((error) => {
-      console.error('Gagal menghapus koleksi dan dokumennya:', error);
-    });
-  }
-
-}
-
-module.exports = ArticlesService;
+  
+  module.exports = ArticlesService;

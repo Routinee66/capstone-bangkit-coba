@@ -1,9 +1,9 @@
 // app.js
 const express = require('express');
 const bodyParser = require('body-parser');
-const authRouter = require('./router/authRouter');
-const articleRouter = require('./router/articleRouter');
+const articlesRouter = require('./router/articlesRouter');
 const batikRouter = require('./router/batikRouter');
+const bookmarkRouter = require('./router/bookmarkRouter');
 const multer = require('multer');
 
 const storage = multer.diskStorage({
@@ -21,11 +21,9 @@ app.use(bodyParser.json());
 app.use(upload.array());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-
-
-app.use('/auth', authRouter); // Mount the auth router at /auth
-app.use('/', articleRouter); // Mount the auth router at /auth
-app.use('/', batikRouter); // Mount the auth router at /auth
+app.use('/api', articlesRouter); 
+app.use('/api', batikRouter); 
+app.use('/api', bookmarkRouter); 
 
 const PORT = process.env.PORT || 3000;
 
