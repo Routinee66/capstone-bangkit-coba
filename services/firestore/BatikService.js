@@ -51,7 +51,6 @@ class BatikService {
     }
 
     await documentRef.set(batik);
-    console.log('Berhasil menambahkan batik');
     return batik.id;
   }
 
